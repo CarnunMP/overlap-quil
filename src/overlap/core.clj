@@ -3,17 +3,19 @@
             [quil.middleware :as m]))
 
 ; [x] draw points on click
-; [] reset on :r keypress
+; [x] reset on :r keypress
 ; [] draw lines between sucessive points
 ; [] when click near initial point, switch into 'fill' (?) mode
 ; [] pixel-by-pixel, colour according to whether 'internal' or 'external' to shape
 ; ...
 
+(def init-state {:points []})
+
 (defn setup []
   (q/frame-rate 30)
   (q/stroke 255)
 
-  {:points []})
+  init-state)
 
 (defn update-state [state]
   state)
@@ -21,6 +23,11 @@
 (defn mouse-pressed [state {:keys [x y button]}]
   (if (= :left button)
     (update state :points conj [x y])
+    state))
+
+(defn key-pressed [state {:keys [key]}]
+  (if (= :r key)
+    init-state
     state))
 
 (defn draw-state [{:keys [points] :as state}]
@@ -36,6 +43,7 @@
   :setup setup
   :update update-state
   :mouse-pressed mouse-pressed
+  :key-pressed key-pressed
   :draw draw-state
   :features [:keep-on-top :no-bind-output]
   :middleware [m/fun-mode])
