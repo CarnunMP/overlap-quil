@@ -4,10 +4,16 @@
 
 ; [x] draw points on click
 ; [x] reset on :r keypress
-; [] draw lines between sucessive points
+; [x] draw lines between sucessive points
 ; [] when click near initial point, switch into 'fill' (?) mode
 ; [] pixel-by-pixel, colour according to whether 'internal' or 'external' to shape
 ; ...
+
+;;; helpers
+(defn- get-line-points [points]
+  (map #(vector %1 %2) points (rest points)))
+
+;;; quil functions
 
 (def init-state {:points []})
 
@@ -35,6 +41,9 @@
 
   (doseq [[x y] points]
     (q/ellipse x y 2 2))
+
+  (doseq [[p1 p2] (get-line-points points)]
+    (q/line p1 p2))
   )
 
 (q/defsketch #_:clj-kondo/ignore overlap
