@@ -7,6 +7,7 @@
 ; [x] draw lines between sucessive points
 ; [x] when click near initial point, close the shape and switch into 'fill' (?) mode
 ; [x] pixel-by-pixel, colour according to whether 'internal' or 'external' to shape
+; [x] really though, do it pixel-by-pixel!
 ; ...
 
 
@@ -67,17 +68,16 @@
 
 (defn- fill [points]
   (q/fill 255)
-  ;(let [gr (q/create-graphics width height)
-  ;      px (q/pixels gr)]
-  ;  (dotimes [i (length. px)]
-  ;    (let [x (mod (inc i) (inc width))
-  ;          y (inc (int (/ (inc i) width)))]
-  ;      (when (point-inside-shape? [x y] points)
-  ;        (aset-int px i )))))
-  (doseq [x (range 1 (inc width))
-          y (range 1 (inc height))]
-    (when (point-inside-shape? [x y] points)
-      (q/ellipse x y 1 1)))
+  (let [gr (q/create-graphics 1 1)
+        _ (q/with-graphics gr (q/background 255))
+        white-px (q/pixels gr)
+        px (q/pixels)]
+    (dotimes [i (alength px)]
+      (let [x (mod i width)
+            y (int (/ (inc i) width))]
+        (when (point-inside-shape? [x y] points)
+          (aset-int px i (aget white-px 0)))))
+    (q/update-pixels))
   (q/fill nil))
 
 ;;; quil functions
