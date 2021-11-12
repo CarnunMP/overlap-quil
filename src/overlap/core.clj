@@ -13,6 +13,7 @@
 
 (def init-state {:points [] ; vector of [x y] points
                  :mode :draw ; options are :draw, :fill, :filling, and :done
+                 :drawing nil ; will be image
                  })
 (def p1-radius 20)
 (def width 500)
@@ -66,19 +67,13 @@
          count
          odd?)))
 
-(defn- fill [points]
-  (q/fill 255)
-  (let [gr (q/create-graphics 1 1)
-        _ (q/with-graphics gr (q/background 255))
-        white-px (q/pixels gr)
-        px (q/pixels)]
-    (dotimes [i (alength px)]
-      (let [x (mod i width)
-            y (int (/ (inc i) width))]
+(defn- get-fill-image [points]
+  (let [image (q/create-image width height :rgb)]
+    (dotimes [x width]
+      (dotimes [y height]
         (when (point-inside-shape? [x y] points)
-          (aset-int px i (aget white-px 0)))))
-    (q/update-pixels))
-  (q/fill nil))
+          (q/set-pixel image x y (q/color 255)))))
+    image))
 
 ;;; quil functions
 
@@ -89,10 +84,12 @@
 
   init-state)
 
-(defn update-state [{:keys [_points mode] :as state}]
+(defn update-state [{:keys [points mode] :as state}]
   (cond
     (= :fill mode) (assoc state :mode :filling)
-    (= :filling mode) (assoc state :mode :done)
+    (= :filling mode) (assoc state
+                             :drawing (get-fill-image points)
+                             :mode :done)
     :else state))
 
 (defn mouse-pressed [{:keys [points mode] :as state} {:keys [x y button]}]
@@ -109,19 +106,19 @@
     init-state
     state))
 
-(defn draw-state [{:keys [points mode]}]
-  (when (not= :done mode)
-    (q/background 0)
+(defn draw-state [{:keys [points mode drawing]}]
+  (q/background 0)
+  (doseq [[p1 p2] (get-line-points points mode)]
+    (q/line p1 p2))
 
+  (when (not= :done mode) 
     (doseq [[x y] points]
       (q/ellipse x y 2 2))
     (when-let [[x1 y1] (first points)]
-      (q/ellipse x1 y1 (* p1-radius 2) (* p1-radius 2)))
-    (doseq [[p1 p2] (get-line-points points mode)]
-      (q/line p1 p2)))
+      (q/ellipse x1 y1 (* p1-radius 2) (* p1-radius 2))))
 
-  (when (= :filling mode)
-    (fill points)))
+  (when (= :done mode)
+    (q/image drawing 0 0)))
 
 (q/defsketch #_:clj-kondo/ignore overlap
   :title "Overlap"
